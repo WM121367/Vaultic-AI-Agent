@@ -1,4 +1,4 @@
-# 🛡️ Vaultic AI Agent (Ver 1.0.0-cloud)
+# 🛡️ Vaultic AI Agent (Ver 1.0.0-cloud) Automated Multi-Chain Trading
 
 Institutional Vault Solvency, Tokenized RWA Collateral & Systemic Risk Analytics Engine for the World Money Map Ecosystem.
 
