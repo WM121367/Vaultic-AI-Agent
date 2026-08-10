@@ -72,25 +72,26 @@ Vaultic AI Agent (`@prime-trade-Engine`) is a specialized sub-agent within the W
 
 ```
 ## ⚙️ Environment Configuration
-Set the following environment variables in your local .env file or Agentverse Secrets:
-```
 
-Variable Name,Description,Requirement
-AGENT_SEED,Mnemonic seed phrase restoring the Vaultic AI wallet,REQUIRED
-WMMO_ADDR,Public Agent Address of the World Money Map Orchestrator,REQUIRED
-DISCORD_WEBHOOK_URL,Webhook URL for automated alerts and notifications,Optional
+Set the following environment variables in your local `.env` file or Agentverse Secrets:
 
-```
-🔒 Security & Privacy Guidelines
+| Variable Name | Description | Requirement |
+| :--- | :--- | :--- |
+| `AGENT_SEED` | Mnemonic seed phrase restoring the Vaultic AI wallet | **REQUIRED** |
+| `WMMO_ADDR` | Public Agent Address of the World Money Map Orchestrator | **REQUIRED** |
+| `COINBASE_API_KEY` | Coinbase API Key ID for live solvency integration | **REQUIRED** |
+| `COINBASE_API_SECRET` | Coinbase API Secret key for authentication | **REQUIRED** |
+
+## 🔒 Security & Privacy Guidelines
 Access Control & Whitelisting: The agent executes sender verification checking sender == os.getenv("WMMO_ADDR") before returning intelligence payloads.
 
 Key Management: Seed phrases (AGENT_SEED) must be stored exclusively in Agentverse Secrets or local .env files. Never commit private credentials to GitHub repositories.
 
 Encrypted uAgents Messaging: Inter-agent communications utilize Fetch.ai uAgents protocol encryption over the Decentralized Web Network.
 
-⚠️ Disclaimer
+## ⚠️ Disclaimer
 NOT FINANCIAL ADVICE. All solvency evaluations, risk scores, and collateral ratios provided by the Vaultic AI Agent are generated automatically for technical research, monitoring, and analytical purposes only. Perform independent due diligence before making institutional asset allocation decisions or interacting with digital asset vaults.
-```
+
 
 
 
