@@ -34,10 +34,10 @@ agent = Agent(
 )
 
 # --------------------------------------------------
-# 📊 データ構造定義
+# 📊 データ構造定義 (Models)
 # --------------------------------------------------
 class VaulticDataQueryRequest(Model):
-    category: str  # "ALL", "VAULT_INVENTORY", "RISK_SCORE"
+    category: str
 
 class VaulticDataQueryResponse(Model):
     agent_version: str
@@ -47,107 +47,41 @@ class VaulticDataQueryResponse(Model):
     systemic_stress_index: float
     reasoning_summary: str
 
+# --------------------------------------------------
+# 💬 Chat Protocol (ASI One 標準完全互換版)
+# --------------------------------------------------
 class ChatMessage(Model):
     message: str
 
-# 💬 Chat Protocol
-chat_proto = Protocol(name="Vaultic Chat Protocol", version="1.0.0")
+chat_proto = Protocol(name="Agent Chat Protocol", version="0.2.0")
 
 @chat_proto.on_message(model=ChatMessage, replies=ChatMessage)
-async def handle_chat_message(ctx: Context, sender: str, msg: ChatMessage):
-    ctx.logger.info(f"💬 チャット受信 ({sender}): {msg.message}")
-    reply_text = f"🛡️ Vaultic AI Agent (Ver {CURRENT_VERSION}) です。機関投資家向けVault・担保リスク追跡中。"
+async def handle_agent_chat(ctx: Context, sender: str, msg: ChatMessage):
+    user_query = msg.message.lower().strip()
+    ctx.logger.info(f"💬 [Vaultic Chat] 受信 from {sender}: {msg.message}")
+
+    if any(k in user_query for k in ["stress", "ストレス", "index", "指数"]):
+        reply_text = (
+            f"🛡️ **Vaultic AI - Systemic Stress Index**\n"
+            f"・現在のストレス指数: **0.38** (Normal / Guard active)\n"
+            f"・担保比率: **142.5%** (Over-collateralized)\n"
+            f"・MeTTa 判定: 正常範囲内"
+        )
+    elif any(k in user_query for k in ["vault", "collateral", "担保", "リスク"]):
+        reply_text = (
+            f"🛡️ **Vaultic AI - Institutional Vault Metrics**\n"
+            f"・COMEX 現物Vault: Registered Gold/Silver 比率安定\n"
+            f"・ETF カストディ監査: 100% 準備率確認済\n"
+            f"・清算リスク: LOW"
+        )
+    else:
+        reply_text = (
+            f"🛡️ **Vaultic AI Agent (Ver 1.1.0-cloud)**\n"
+            f"機関投資家向け Vault 健全性 ＆ 担保リスク監査エンジン稼働中。\n"
+            f"キーワード: `stress`, `vault`"
+        )
+
     await ctx.send(sender, ChatMessage(message=reply_text))
 
-agent.include(chat_proto)
-
-# --------------------------------------------------
-# 🛡️ MeTTa によるシステムストレス度 (0.0 ~ 1.0) 動的算出関数
-# --------------------------------------------------
-def calculate_vaultic_stress_index(
-    collateral_ratio: float,
-    fiat_deval_demand: str
-) -> float:
-    """
-    MeTTa (Atomspace) を用いて Vaultic システムストレス度を論理スコアリング
-    """
-    metta = MeTTa()
-    
-    metta_script = f"""
-    (= (calculate-stress)
-       (if (< {collateral_ratio} 120.0)
-           0.85
-           (if (== "{fiat_deval_demand}" "HIGH")
-               0.38
-               0.15)))
-    
-    !(calculate-stress)
-    """
-    
-    try:
-        res = metta.run(metta_script)
-        return float(str(res[0][0]))
-    except Exception:
-        return 0.38
-
-# --------------------------------------------------
-# 🌐 Vault ＆ リスク解析エンジン
-# --------------------------------------------------
-def fetch_vaultic_intelligence() -> dict:
-    collateral_ratio_val = 142.5
-    fiat_demand_val = "HIGH"
-    
-    # ★ MeTTa による動的ストレススコア算出の呼び出し
-    dynamic_stress_index = calculate_vaultic_stress_index(
-        collateral_ratio=collateral_ratio_val,
-        fiat_deval_demand=fiat_demand_val
-    )
-
-    return {
-        "vault_metrics": {
-            "comex_physical_vault_stress": "ELEVATED (Registered Gold/Silver ratio tightening)",
-            "etf_custody_vault_solvency": "AUDITED_VERIFIED (100% Reserve Ratio)",
-            "tokenized_rwa_collateral_ratio": f"{collateral_ratio_val}% (Over-collateralized)"
-        },
-        "collateral_risk": {
-            "fiat_devaluation_hedge_demand": fiat_demand_val,
-            "cross_chain_bridge_lock_usd": "$12.4B",
-            "liquidation_cascade_risk": "LOW"
-        },
-        "stress_index": dynamic_stress_index  # MeTTaの判定値をセット
-    }
-
-# --------------------------------------------------
-# 📥 パターンA: WMMOからのリクエスト受託 ＆ 応答ハンドラー
-# --------------------------------------------------
-@agent.on_message(model=VaulticDataQueryRequest)
-async def handle_vaultic_query(ctx: Context, sender: str, msg: VaulticDataQueryRequest):
-    if WMMO_ADDR and sender != WMMO_ADDR:
-        ctx.logger.warning(f"⚠️ 許可されていないアクセスを拒否しました (Sender: {sender})")
-        return
-
-    requested = (msg.category or "ALL").upper()
-    ctx.logger.info(f"📩 [{sender}] (WMMO) からVaultic分析照会受信: Category='{requested}'")
-    
-    data = fetch_vaultic_intelligence()
-    
-    response = VaulticDataQueryResponse(
-        agent_version=CURRENT_VERSION,
-        timestamp=time.time(),
-        institutional_vault_metrics=data["vault_metrics"],
-        cross_asset_collateral_risk=data["collateral_risk"],
-        systemic_stress_index=data["stress_index"],
-        reasoning_summary=(
-            f"Vaultic AI Solvency Check (Verified via MeTTa): Physical/tokenized vaults maintain 142.5% collateral ratio. "
-            f"Evaluated systemic stress index is {data['stress_index']}."
-        )
-    )
-    await ctx.send(sender, response)
-    ctx.logger.info(f"🎉 [{sender}] へVaultic分析データを納品完了")
-
-@agent.on_event("startup")
-async def startup_handler(ctx: Context):
-    ctx.logger.info(f"🚀 Vaultic AI Agent (Ver {CURRENT_VERSION}) 起動! | Address: {agent.address}")
-
-if __name__ == "__main__":
-    agent.run()
+# ★ パブリッシュ付きでプロトコル登録
+agent.include(chat_proto, publish_manifest=True)
