@@ -1,5 +1,5 @@
 # ==================================================
-# 🛡️ Vaultic AI - Institutional Vault & Asset Risk Engine (Ver 1.1.0-cloud)
+# 🛡️ Vaultic AI - Institutional Vault & Asset Risk Engine (Ver 1.1.1-cloud)
 # ==================================================
 import sys
 import subprocess
@@ -21,7 +21,7 @@ except ImportError:
 
 from hyperon import MeTTa
 
-CURRENT_VERSION = "1.1.0-cloud"
+CURRENT_VERSION = "1.1.1-cloud"
 
 # Secretsから設定を取得
 AGENT_SEED = os.getenv("AGENT_SEED")
@@ -190,7 +190,7 @@ async def handle_agent_chat(ctx: Context, sender: str, msg: ChatMessage):
         )
     else:
         reply_text = (
-            f"🛡️ **Vaultic AI Agent (Ver 1.1.0-cloud)**\n"
+            f"🛡️ **Vaultic AI Agent (Ver {CURRENT_VERSION})**\n"
             f"機関投資家向け Vault 健全性 ＆ 担保リスク監査エンジン稼働中。\n"
             f"キーワード: `stress`, `vault`"
         )
@@ -221,5 +221,8 @@ async def handle_trade_signal(ctx: Context, sender: str, msg: TradeSignal):
 agent.include(chat_proto, publish_manifest=True)
 agent.include(trade_proto, publish_manifest=True)
 
-if __name__ == "__main__":
-    agent.run()
+@agent.on_event("startup")
+async def startup_handler(ctx: Context):
+    ctx.logger.info(f"🚀 Vaultic AI 起動完了 | Address: {agent.address}")
+
+# ※ Agentverse上では agent.run() は不要のため削除
